@@ -6,6 +6,7 @@ from .models import Habit
 from users.models import UserProfile
 from django.conf import settings
 
+
 @shared_task
 def send_reminders():
     now = timezone.localtime().time()
@@ -23,6 +24,7 @@ def send_reminders():
                 send_telegram_message(profile.telegram_chat_id, message)
                 habit.last_reminder_date = today
                 habit.save(update_fields=['last_reminder_date'])
+
 
 def send_telegram_message(chat_id, text):
     token = settings.TG_BOT_TOKEN
