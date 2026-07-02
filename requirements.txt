@@ -10,3 +10,7 @@ python-decouple
 pytest-django
 pytest-cov
 requests
+gunicorn
+psycopg2-binary
+dj-database-url
+flake8
