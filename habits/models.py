@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
 
+
 class Habit(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='habits')
     place = models.CharField(max_length=255, verbose_name='Место')
@@ -36,4 +37,3 @@ class Habit(models.Model):
 
     def __str__(self):
         return f"{self.action} в {self.time} в {self.place}"
-
