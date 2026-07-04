@@ -56,23 +56,17 @@ jobs:
   build_and_deploy:
     needs: test
     runs-on: ubuntu-latest
-    # Временно разрешим деплой для любого push – для теста.
-    # После успешного теста замени на:
-    # if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker images
         run: docker compose build
-      - name: Set up SSH key
+      - name: Deploy to server via SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo -e "Host deploy_server\n  HostName ${{ secrets.SERVER_HOST }}\n  User ${{ secrets.SERVER_USER }}\n  IdentityFile ~/.ssh/deploy_key\n  StrictHostKeyChecking no" >> ~/.ssh/config
-      - name: Deploy via SSH
-        run: |
-          ssh deploy_server << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             cd /opt/habit_tracker
             git pull origin ${{ github.ref_name }}
             docker compose down
