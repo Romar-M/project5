@@ -10,7 +10,7 @@
 5. `python manage.py migrate && python manage.py runserver`
 6. Для Celery: запустить Redis, `celery -A config worker -l info -P eventlet`, `celery -A config beat -l info`
 
-## Запуск через Docker
+## Запуск через Docker:
 ```bash
 docker compose up -d --build
 Сервисы: web (Django), db (PostgreSQL), redis, celery_worker, celery_beat, nginx (порт 80).
