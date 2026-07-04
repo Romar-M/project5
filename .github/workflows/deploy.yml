@@ -56,20 +56,34 @@ jobs:
   build_and_deploy:
     needs: test
     runs-on: ubuntu-latest
+    # Временно разрешён деплой на любой пуш (для теста).
+    # После успешного деплоя замени на:
+    # if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
       - name: Build Docker images
         run: docker compose build
-      - name: Deploy to server via SSH
+
+      - name: Setup SSH key and known hosts
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SERVER_HOST }}
+          SSH_USER: ${{ secrets.SERVER_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Добавляем хост в known_hosts, чтобы не спрашивал подтверждение
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts 2>/dev/null
+          # Проверочный вывод (можно удалить после отладки)
+          echo "Will connect to $SSH_USER@$SSH_HOST"
+
+      - name: Deploy over SSH
         env:
           SSH_HOST: ${{ secrets.SERVER_HOST }}
           SSH_USER: ${{ secrets.SERVER_USER }}
-          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
             cd /opt/habit_tracker
             git pull origin ${{ github.ref_name }}
